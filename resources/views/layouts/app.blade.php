@@ -32,7 +32,7 @@
 
         <!-- Page Content -->
         <main>
-            @yield('content')
+            {{ $slot }} <!-- Aquí se insertará el contenido de cada página -->
         </main>
     </div>
 </body>
