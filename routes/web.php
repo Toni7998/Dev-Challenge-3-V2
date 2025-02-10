@@ -108,8 +108,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/shopping-list/{listId}/item/{itemId}', [ShoppingListController::class, 'deleteItem'])->name('shopping_list.delete_item');
     Route::post('/shopping-list/{listId}/share', [ShoppingListController::class, 'shareList'])->name('shopping_list.share');
     Route::post('/shopping_list/{listId}/toggle_done/{itemId}', [ShoppingListController::class, 'toggleDone'])->name('shopping_list.toggle_done');
-
     Route::delete('/shopping-list/{listId}', [ShoppingListController::class, 'delete'])->name('shopping_list.delete');
+    Route::get('/shopping-list/accept/{ownerId}/{listId}', [ShoppingListController::class, 'acceptShare'])
+        ->name('shopping_list.accept');
 
 });
 

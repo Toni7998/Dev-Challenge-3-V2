@@ -48,10 +48,12 @@
                             <form action="{{ route('shopping_list.share', $listId) }}" method="POST"
                                 class="flex items-center space-x-2">
                                 @csrf
-                                <input type="text" name="shared_user_id" placeholder="ID Usuario"
+                                <input type="email" name="email" placeholder="Correo del usuario"
                                     class="p-2 border rounded-md w-40" required>
                                 <button type="submit"
-                                    class="bg-gray-300 text-gray-700 p-2 rounded-md hover:bg-gray-400 transition-colors">Compartir</button>
+                                    class="bg-gray-300 text-gray-700 p-2 rounded-md hover:bg-gray-400 transition-colors">
+                                    Compartir
+                                </button>
                             </form>
                             <!-- Formulario para eliminar la lista -->
                             <form action="{{ route('shopping_list.delete', $listId) }}" method="POST"
