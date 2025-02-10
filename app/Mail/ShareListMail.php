@@ -14,26 +14,26 @@ class ShareListMail extends Mailable
 
     public $listId;
     public $ownerId;
-    public $acceptUrl;
+    public $listName;
+    public $shoppingListUrl;
 
-    public function __construct($listId, $ownerId)
+    public function __construct($listId, $ownerId, $listName)
     {
         $this->listId = $listId;
         $this->ownerId = $ownerId;
+        $this->listName = $listName;
 
-        // Generar la URL correctamente
-        $this->acceptUrl = route('shopping_list.accept', [
-            'ownerId' => $this->ownerId,
-            'listId' => $this->listId
-        ]);
+        // URL para acceder a la lista de compras
+        $this->shoppingListUrl = route('shopping_list.index');
     }
 
     public function build()
     {
-        return $this->subject('Te han compartido una lista de compras')
+        return $this->subject('Te han compartido una lista de compras: ' . $this->listName)
             ->view('emails.share_list')
             ->with([
-                'acceptUrl' => $this->acceptUrl,
+                'listName' => $this->listName,
+                'shoppingListUrl' => $this->shoppingListUrl,
             ]);
     }
 }

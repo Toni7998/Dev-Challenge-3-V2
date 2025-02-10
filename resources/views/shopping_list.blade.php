@@ -49,12 +49,14 @@
                                 class="flex items-center space-x-2">
                                 @csrf
                                 <input type="email" name="email" placeholder="Correo del usuario"
-                                    class="p-2 border rounded-md w-40" required>
+                                    class="p-2 border rounded-md w-40 bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                    required>
                                 <button type="submit"
                                     class="bg-gray-300 text-gray-700 p-2 rounded-md hover:bg-gray-400 transition-colors">
                                     Compartir
                                 </button>
                             </form>
+
                             <!-- Formulario para eliminar la lista -->
                             <form action="{{ route('shopping_list.delete', $listId) }}" method="POST"
                                 class="delete-list-form flex items-center space-x-2">

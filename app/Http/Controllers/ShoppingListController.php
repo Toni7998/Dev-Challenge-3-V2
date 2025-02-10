@@ -116,41 +116,41 @@ class ShoppingListController extends Controller
 
     public function shareList(Request $request, $listId)
     {
-        $request->validate([
-            'email' => 'required|email'
-        ]);
-
         $userId = Auth::id();
         $email = $request->input('email');
 
+        // Buscar usuario por email
         $user = User::where('email', $email)->first();
 
         if (!$user) {
-            return redirect()->route('shopping_list.index')->with('error', 'El usuario con ese email no existe.');
+            return redirect()->route('shopping_list.index')->with('error', 'Usuario no encontrado!');
         }
 
-        $sharedUserId = $user->id;
-
-        // Verificar si la lista existe
+        $sharedUserId = $user->id; // ID del usuario con el que compartimos la lista
         $listPath = "shopping_lists/{$userId}/{$listId}";
+
+        // Obtener la lista
         $list = $this->database->getReference($listPath)->getValue();
 
         if (!$list) {
-            return redirect()->route('shopping_list.index')->with('error', 'Lista no encontrada.');
+            return redirect()->route('shopping_list.index')->with('error', 'Lista no encontrada!');
         }
 
-        // Verificar si ya está compartida con el usuario
-        if (isset($list['shared_with'][$sharedUserId])) {
-            return redirect()->route('shopping_list.index')->with('info', 'Esta lista ya está compartida con este usuario.');
+        // Obtener el nombre de la lista
+        $listName = $list['name'] ?? 'Lista sin nombre';
+        // **Verificar si el usuario ya tiene esta lista compartida**
+        $sharedUsers = $list['shared_with'] ?? [];
+        if (array_key_exists($sharedUserId, $sharedUsers)) {
+            return redirect()->route('shopping_list.index')->with('error', 'Este usuario ya tiene acceso a esta lista!');
         }
 
-        // Guardar en Firebase que la lista se ha compartido
+        // **Agregar al usuario a "shared_with" en Firebase**
         $this->database->getReference("{$listPath}/shared_with/{$sharedUserId}")->set(true);
 
-        // Enviar correo de invitación
-        Mail::to($email)->send(new ShareListMail($listId, $userId));
+        // Enviar correo notificando al usuario
+        Mail::to($email)->send(new ShareListMail($listId, $userId, $listName));
 
-        return redirect()->route('shopping_list.index')->with('success', 'Invitación enviada correctamente.');
+        return redirect()->route('shopping_list.index')->with('success', 'La lista ha sido compartida exitosamente!');
     }
 
 
@@ -173,16 +173,34 @@ class ShoppingListController extends Controller
     public function delete($listId)
     {
         $userId = Auth::id();
-        $listPath = "shopping_lists/{$userId}/{$listId}";
 
-        $list = $this->database->getReference($listPath)->getValue();
+        // Primero, buscamos en todas las listas si el usuario es el propietario o si la lista está compartida con él
+        $list = $this->database->getReference("shopping_lists/")->getValue();
 
-        if (!$list) {
+        // Verificar si la lista existe
+        $listFound = null;
+        foreach ($list as $ownerId => $lists) {
+            foreach ($lists as $id => $item) {
+                if ($id == $listId) {
+                    $listFound = $item;
+                    break 2; // Romper el bucle si encontramos la lista
+                }
+            }
+        }
+
+        if (!$listFound) {
             return redirect()->back()->with('error', 'Lista no encontrada.');
         }
 
-        $this->database->getReference($listPath)->remove();
+        // Verificar si el usuario es el propietario de la lista
+        if ($listFound['owner'] != $userId) {
+            return redirect()->back()->with('error', 'No puedes eliminar esta lista porque no eres el propietario.');
+        }
+
+        // Eliminar la lista si el usuario es el propietario
+        $this->database->getReference("shopping_lists/{$userId}/{$listId}")->remove();
 
         return redirect()->back()->with('success', 'Lista eliminada correctamente.');
     }
+
 }
