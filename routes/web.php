@@ -96,10 +96,22 @@ Route::get('auth/github/callback', function () {
 require __DIR__ . '/auth.php';
 
 //  Listas
-Route::get('/shopping_list', [ShoppingListController::class, 'index'])->name('shopping_list.index');
-Route::post('/shopping_list/add', [ShoppingListController::class, 'addItem'])->name('shopping_list.add');
-Route::post('/shopping_list/add_category', [ShoppingListController::class, 'addCategory'])->name('shopping_list.add_category');
-Route::post('/shopping_list/delete', [ShoppingListController::class, 'deleteItem'])->name('shopping_list.delete');
+Route::middleware('auth')->group(function () {
+    Route::get('/shopping-list', [ShoppingListController::class, 'index'])->name('shopping_list.index');
+
+    // Ruta para agregar una lista
+    Route::post('/shopping-list/add', [ShoppingListController::class, 'addList'])->name('shopping_list.add');
+
+    // Ruta para agregar un ítem a una lista
+    Route::post('/shopping-list/{listId}/item', [ShoppingListController::class, 'addItem'])->name('shopping_list.add_item');
+
+    Route::delete('/shopping-list/{listId}/item/{itemId}', [ShoppingListController::class, 'deleteItem'])->name('shopping_list.delete_item');
+    Route::post('/shopping-list/{listId}/share', [ShoppingListController::class, 'shareList'])->name('shopping_list.share');
+    Route::post('/shopping_list/{listId}/toggle_done/{itemId}', [ShoppingListController::class, 'toggleDone'])->name('shopping_list.toggle_done');
+
+    Route::delete('/shopping-list/{listId}', [ShoppingListController::class, 'delete'])->name('shopping_list.delete');
+
+});
 
 //Ruta para el firebase
 Route::get('/firebase/store', [FirebaseController::class, 'storeData']);

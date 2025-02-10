@@ -1,161 +1,152 @@
 <x-app-layout>
+    @section('title', 'Mis Listas de Compras')
+
     <div class="container mx-auto p-6">
-        <h1 class="text-3xl font-semibold text-center text-gray-900 dark:text-gray-100 mb-8">Llista de Compra</h1>
+        <h1 class="text-3xl font-semibold text-center mb-8 text-gray-900 dark:text-white">Mis Listas de Compras</h1>
 
-        <!-- Mostrar mensajes de éxito -->
-        <div id="message" class="hidden bg-green-500 text-white p-4 rounded-md mb-6 text-center"></div>
+        <!-- Mostrar mensajes de éxito o error -->
+        @if(session('success'))
+            <div class="alert alert-success mb-4 p-4 text-green-700 bg-green-100 rounded-lg">
+                {{ session('success') }}
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="alert alert-danger mb-4 p-4 text-red-700 bg-red-100 rounded-lg">
+                {{ session('error') }}
+            </div>
+        @endif
 
-        <!-- Formulario para agregar un nuevo elemento -->
-        <form id="addItemForm" class="mb-8 text-center">
-            <input type="text" name="item_name" id="item_name" placeholder="Nom de l'element" required
-                class="p-3 mb-4 w-3/4 max-w-md border rounded-md text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700">
-            <select name="category" id="category" required
-                class="p-3 mb-4 w-3/4 max-w-md border rounded-md text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700">
-                <option value="">Selecciona Categoria</option>
-            </select>
+        <!-- Instrucciones -->
+        <div class="text-center text-gray-700 mb-6">
+            <h2 class="text-xl font-semibold">1. Crear lista</h2>
+            <p>Después de crear una lista, podrás añadir elementos y categorías que se aplicarán solo a esa lista.</p>
+        </div>
+
+        <!-- Formulario para agregar una nueva lista -->
+        <form action="{{ route('shopping_list.add') }}" method="POST" class="mb-8 text-center">
+            @csrf
+            <input type="text" name="list_name"
+                class="p-3 mb-4 w-3/4 sm:w-1/2 max-w-md border rounded-md text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700"
+                placeholder="Nombre de la lista" required>
             <button type="submit"
-                class="bg-green-500 text-white p-3 rounded-md hover:bg-green-600 transition-colors">Afegir
-                Element</button>
+                class="bg-blue-500 text-white p-3 rounded-md hover:bg-blue-600 transition-colors">Agregar Lista</button>
         </form>
 
-        <!-- Formulario para agregar una nueva categoría -->
-        <form id="addCategoryForm" class="mb-8 text-center">
-            <input type="text" name="category_name" id="category_name" placeholder="Nom de la categoria" required
-                class="p-3 mb-4 w-3/4 max-w-md border rounded-md text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700">
-            <button type="submit"
-                class="bg-green-500 text-white p-3 rounded-md hover:bg-green-600 transition-colors">Afegir
-                Categoria</button>
-        </form>
+        <!-- Verificar si hay listas de compras -->
+        @if(empty($shoppingLists))
+            <p class="text-center text-gray-500">No tienes listas de compras. ¡Crea una nueva!</p>
+        @else
+                @foreach ($shoppingLists as $listId => $list)
+                        <div class="bg-white shadow-md rounded-lg mb-6 p-4 dark:bg-gray-800 dark:text-gray-100">
+                            <div class="flex justify-between items-center mb-4">
+                                <h5 class="text-xl font-semibold">{{ $list['name'] }}</h5>
 
-        <!-- Mostrar los elementos de la lista -->
-        <h2 class="text-2xl font-semibold text-center text-gray-900 dark:text-gray-100 mb-6">Elements de la Llista</h2>
-        <div id="shoppingList"></div>
+                                <div class="flex items-center space-x-2">
+                                    <!-- Formulario para compartir la lista -->
+                                    <form action="{{ route('shopping_list.share', $listId) }}" method="POST"
+                                        class="flex items-center space-x-2">
+                                        @csrf
+                                        <input type="text" name="shared_user_id" placeholder="ID Usuario"
+                                            class="p-2 border rounded-md w-40" required>
+                                        <button type="submit"
+                                            class="bg-gray-300 text-gray-700 p-2 rounded-md hover:bg-gray-400 transition-colors">Compartir</button>
+                                    </form>
+
+                                    <!-- Formulario para eliminar la lista -->
+                                    <form action="{{ route('shopping_list.delete', $listId) }}" method="POST"
+                                        class="delete-list-form flex items-center space-x-2">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                            class="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition-colors">
+                                            Eliminar Lista
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-none">
+                                    @foreach ($list['items'] ?? [] as $itemId => $item)
+                                                        <li class="flex justify-between items-center p-3 border-b border-gray-300 dark:border-gray-600">
+                                                            <span>{{ $item['name'] }} ({{ $item['category'] }})</span>
+
+                                                            <div class="flex items-center space-x-2">
+                                                                <!-- Botón para marcar como hecho -->
+                                                                <button class="done-btn px-4 py-2 rounded-md transition-colors w-32
+                                        {{ $item['done'] ? 'bg-green-500 text-white' : 'bg-yellow-500 text-white' }}" data-item-id="{{ $itemId }}"
+                                                                    data-list-id="{{ $listId }}" data-done="{{ $item['done'] ? 'true' : 'false' }}">
+                                                                    {{ $item['done'] ? 'Hecho' : 'Marcar como hecho' }}
+                                                                </button>
+
+
+                                                                <!-- Formulario para eliminar el ítem -->
+                                                                <form action="{{ route('shopping_list.delete_item', [$listId, $itemId]) }}" method="POST"
+                                                                    class="flex items-center space-x-2">
+                                                                    @csrf
+                                                                    @method('DELETE')
+                                                                    <button type="submit"
+                                                                        class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors w-32">
+                                                                        Eliminar
+                                                                    </button>
+                                                                </form>
+                                                            </div>
+                                                        </li>
+                                    @endforeach
+                                </ul>
+
+                                <!-- Formulario para agregar un nuevo ítem -->
+                                <form action="{{ route('shopping_list.add_item', $listId) }}" method="POST" class="mt-4 flex space-x-4">
+                                    @csrf
+                                    <input type="text" name="item_name"
+                                        class="p-3 w-full sm:w-1/2 max-w-xs border rounded-md text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700"
+                                        placeholder="Nombre del ítem" required>
+                                    <input type="text" name="category"
+                                        class="p-3 w-full sm:w-1/2 max-w-xs border rounded-md text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700"
+                                        placeholder="Categoría" required>
+                                    <button type="submit"
+                                        class="bg-green-500 text-white p-3 rounded-md hover:bg-green-600 transition-colors">Agregar
+                                        Ítem</button>
+                                </form>
+                            </div>
+                        </div>
+                @endforeach
+        @endif
     </div>
 
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js';
-        import { getDatabase, ref, push, remove, onValue, set } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js';
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.done-btn').forEach((button) => {
+                button.addEventListener('click', async function (event) {
+                    const btn = event.target;
+                    const itemId = btn.getAttribute('data-item-id');
+                    const listId = btn.getAttribute('data-list-id');
+                    const currentState = btn.getAttribute('data-done') === 'true';
+                    const newState = !currentState;
 
-        // Configuración de Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyDxW1e7hZTJ0gOTR2A5Xkxl1dsjmsxyz",
-            authDomain: "m12-proyecto.firebaseapp.com",
-            databaseURL: "https://m12-proyecto-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "m12-proyecto",
-            storageBucket: "m12-proyecto.appspot.com",
-            messagingSenderId: "109360802652583660232",
-            appId: "1:109360802652583660232:web:9b8a1b2bc0f2388b124c68"
-        };
+                    try {
+                        let response = await fetch(`/shopping_list/${listId}/toggle_done/${itemId}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({ done: newState })
+                        });
 
-        // Inicializa Firebase
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            const shoppingListRef = ref(database, 'shopping_list');
-            const categoriesRef = ref(database, 'categories');
-
-            const shoppingListContainer = document.getElementById('shoppingList');
-            const categorySelect = document.getElementById('category');
-            const messageBox = document.getElementById('message');
-
-            const showMessage = (message) => {
-                messageBox.textContent = message;
-                messageBox.classList.remove('hidden');
-                setTimeout(() => messageBox.classList.add('hidden'), 3000);
-            };
-
-            // Carga de categorías
-            onValue(categoriesRef, (snapshot) => {
-                const categories = snapshot.val() || {};
-                categorySelect.innerHTML = '<option value="">Selecciona Categoria</option>';
-                Object.keys(categories).forEach((key) => {
-                    const option = document.createElement('option');
-                    option.value = key;
-                    option.textContent = categories[key]?.name || 'Categoria sense nom';
-                    categorySelect.appendChild(option);
-                });
-            });
-
-            // Carga de la lista de la compra
-            onValue(shoppingListRef, (snapshot) => {
-                shoppingListContainer.innerHTML = '';
-                const items = snapshot.val() || {};
-                Object.entries(items).forEach(([key, item]) => {
-                    const div = document.createElement('div');
-                    div.className = 'item bg-gray-200 dark:bg-gray-700 p-4 rounded-md mb-4 flex justify-between items-center shadow-md';
-                    div.innerHTML = `
-                        <span class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                            ${item.name} (${item.category || 'Sense categoria'})
-                        </span>
-                        <div class="flex items-center space-x-2">
-                            <button class="done-btn ${item.done ? 'bg-green-500' : 'bg-gray-500'} text-white p-2 rounded-md transition-colors" data-id="${key}">
-                                ${item.done ? 'Fet' : 'Per Fer'}
-                            </button>
-                            <button class="delete-btn bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition-colors" data-id="${key}">
-                                Esborrar
-                            </button>
-                        </div>
-                    `;
-                    shoppingListContainer.appendChild(div);
-                });
-
-                // Gestión del botón "Esborrar"
-                document.querySelectorAll('.delete-btn').forEach((button) => {
-                    button.addEventListener('click', (event) => {
-                        const id = event.target.dataset.id;
-                        remove(ref(database, 'shopping_list/' + id));
-                        showMessage('Element esborrat correctament!');
-                    });
-                });
-
-                // Gestión del botón "Fet"
-                document.querySelectorAll('.done-btn').forEach((button) => {
-                    button.addEventListener('click', (event) => {
-                        const id = event.target.dataset.id;
-                        const itemRef = ref(database, 'shopping_list/' + id);
-
-                        // Alternar el estado de "hecho"
-                        onValue(itemRef, (snapshot) => {
-                            const item = snapshot.val();
-                            const newState = !item.done;
-
-                            // Actualizar el elemento con el nuevo estado
-                            set(itemRef, { ...item, done: newState });
-                        }, { onlyOnce: true });
-                    });
-                });
-            });
-
-            // Agregar nuevo elemento
-            document.getElementById('addItemForm').addEventListener('submit', (event) => {
-                event.preventDefault();
-                const itemName = document.getElementById('item_name').value;
-                const categoryId = document.getElementById('category').value;
-
-                let categoryName = '';
-                onValue(ref(database, 'categories/' + categoryId), (snapshot) => {
-                    const category = snapshot.val();
-                    if (category) {
-                        categoryName = category.name;
+                        let result = await response.json();
+                        if (result.success) {
+                            // Actualizar visualmente el botón
+                            btn.textContent = newState ? 'Hecho' : 'Marcar como hecho';
+                            btn.setAttribute('data-done', newState.toString());
+                            btn.classList.toggle('bg-green-500', newState);
+                            btn.classList.toggle('bg-yellow-500', !newState);
+                        }
+                    } catch (error) {
+                        alert('Error al actualizar el estado.');
                     }
-
-                    push(shoppingListRef, { name: itemName, category: categoryName, done: false });
-                    showMessage('Element afegit correctament!');
                 });
-
-                event.target.reset();
-            });
-
-            // Agregar nueva categoría
-            document.getElementById('addCategoryForm').addEventListener('submit', (event) => {
-                event.preventDefault();
-                const categoryName = document.getElementById('category_name').value;
-
-                push(categoriesRef, { name: categoryName });
-                showMessage('Categoria afegida correctament!');
-                event.target.reset();
             });
         });
     </script>
+
 </x-app-layout>

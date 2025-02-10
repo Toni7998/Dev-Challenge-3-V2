@@ -43,5 +43,7 @@ return [
         'redirect' => env('GITHUB_REDIRECT_URI'), // Usar la variable correcta
     ],
 
-
+    'firebase' => [
+        'credentials' => env('FIREBASE_CREDENTIALS'),
+    ],
 ];
