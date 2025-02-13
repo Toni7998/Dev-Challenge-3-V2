@@ -65,13 +65,29 @@ class ShoppingListController extends Controller
     public function addItem(Request $request, $listId)
     {
         $userId = Auth::id();
-        $listPath = "shopping_lists/{$userId}/{$listId}/items";
 
-        if (!$this->database->getReference("shopping_lists/{$userId}/{$listId}")->getValue()) {
+        // Buscar la lista en todas las listas disponibles
+        $allLists = $this->database->getReference("shopping_lists")->getValue();
+        $ownerId = null;
+
+        foreach ($allLists as $owner => $lists) {
+            if (isset($lists[$listId])) {
+                $ownerId = $owner;
+                break;
+            }
+        }
+
+        if (!$ownerId) {
             return redirect()->route('shopping_list.index')->with('error', 'Lista no encontrada!');
         }
 
-        $itemRef = $this->database->getReference($listPath)->push();
+        // Verificar si el usuario es el owner o si la lista está compartida con él
+        $list = $this->database->getReference("shopping_lists/{$ownerId}/{$listId}")->getValue();
+        if ($list['owner'] != $userId && !isset($list['shared_with'][$userId])) {
+            return redirect()->route('shopping_list.index')->with('error', 'No tienes permiso para modificar esta lista!');
+        }
+
+        $itemRef = $this->database->getReference("shopping_lists/{$ownerId}/{$listId}/items")->push();
         $itemRef->set([
             'name' => $request->input('item_name'),
             'category' => $request->input('category'),
@@ -81,24 +97,64 @@ class ShoppingListController extends Controller
         return redirect()->route('shopping_list.index')->with('success', 'Ítem añadido correctamente!');
     }
 
+
     public function deleteItem($listId, $itemId)
     {
         $userId = Auth::id();
-        $listPath = "shopping_lists/{$userId}/{$listId}/items/{$itemId}";
 
-        if (!$this->database->getReference("shopping_lists/{$userId}/{$listId}")->getValue()) {
+        // Buscar la lista en todas las listas disponibles
+        $allLists = $this->database->getReference("shopping_lists")->getValue();
+        $ownerId = null;
+
+        foreach ($allLists as $owner => $lists) {
+            if (isset($lists[$listId])) {
+                $ownerId = $owner;
+                break;
+            }
+        }
+
+        if (!$ownerId) {
             return redirect()->route('shopping_list.index')->with('error', 'Lista no encontrada!');
         }
 
-        $this->database->getReference($listPath)->remove();
+        // Verificar si el usuario es el owner o si la lista está compartida con él
+        $list = $this->database->getReference("shopping_lists/{$ownerId}/{$listId}")->getValue();
+        if ($list['owner'] != $userId && !isset($list['shared_with'][$userId])) {
+            return redirect()->route('shopping_list.index')->with('error', 'No tienes permiso para modificar esta lista!');
+        }
+
+        $this->database->getReference("shopping_lists/{$ownerId}/{$listId}/items/{$itemId}")->remove();
 
         return redirect()->route('shopping_list.index')->with('success', 'Item eliminado correctamente!');
     }
 
+
     public function toggleDone(Request $request, $listId, $itemId)
     {
         $userId = Auth::id();
-        $itemRef = $this->database->getReference("shopping_lists/{$userId}/{$listId}/items/{$itemId}");
+
+        // Buscar la lista en todas las listas disponibles
+        $allLists = $this->database->getReference("shopping_lists")->getValue();
+        $ownerId = null;
+
+        foreach ($allLists as $owner => $lists) {
+            if (isset($lists[$listId])) {
+                $ownerId = $owner;
+                break;
+            }
+        }
+
+        if (!$ownerId) {
+            return response()->json(['error' => 'Lista no encontrada.'], 404);
+        }
+
+        // Verificar si el usuario es el owner o si la lista está compartida con él
+        $list = $this->database->getReference("shopping_lists/{$ownerId}/{$listId}")->getValue();
+        if ($list['owner'] != $userId && !isset($list['shared_with'][$userId])) {
+            return response()->json(['error' => 'No tienes permiso para modificar esta lista.'], 403);
+        }
+
+        $itemRef = $this->database->getReference("shopping_lists/{$ownerId}/{$listId}/items/{$itemId}");
         $item = $itemRef->getValue();
 
         if (!$item) {
@@ -113,6 +169,7 @@ class ShoppingListController extends Controller
             'done' => $newState
         ]);
     }
+
 
     public function shareList(Request $request, $listId)
     {
