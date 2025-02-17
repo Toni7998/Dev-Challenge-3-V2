@@ -73,7 +73,7 @@
                                         <div class="flex items-center space-x-3 w-full">
                                             <button
                                                 class="mark-done flex items-center justify-center w-10 h-10 rounded-full transition-all 
-                                                                                                                                                                                {{ $item['done'] ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-800' }}"
+                                                                                                                                                                                                                                {{ $item['done'] ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-800' }}"
                                                 data-item-id="{{ $itemId }}" data-list-id="{{ $listId }}"
                                                 data-done="{{ $item['done'] ? 'true' : 'false' }}">
 
@@ -113,8 +113,9 @@
                             <!-- Modal para añadir un ítem -->
                             <div class="text-center mb-6">
                                 <button id="openModalBtn"
-                                    class="bg-green-500 text-white p-3 rounded-md hover:bg-green-600 transition-colors">Añadir
-                                    Ítem</button>
+                                    class="bg-green-500 text-white p-4 rounded-md hover:bg-green-600 transition-colors text-lg w-full sm:w-4/4 lg:w-2/2 mx-auto">
+                                    ➕
+                                </button>
                             </div>
 
                             <!-- Modal -->
@@ -136,7 +137,8 @@
                                             placeholder="Categoría" required>
 
                                         <button type="submit"
-                                            class="bg-green-500 text-white p-3 rounded-md hover:bg-green-600 transition-colors">➕</button>
+                                            class="bg-green-500 text-white p-3 rounded-md hover:bg-green-600 transition-colors">Añadir
+                                            Item</button>
                                     </form>
                                     <button id="closeModalBtn"
                                         class="mt-4 bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition-colors">Cerrar</button>
