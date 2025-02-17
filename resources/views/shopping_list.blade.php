@@ -16,7 +16,6 @@
         @endif
 
         <div class="mb-8 text-center">
-            <!-- Formulario visible por defecto -->
             <form id="add-list-form" action="{{ route('shopping_list.add') }}" method="POST" class="mt-4 text-center">
                 @csrf
                 <input type="text" name="list_name"
@@ -37,6 +36,7 @@
                         class="bg-white shadow-md rounded-lg p-4 dark:bg-gray-800 dark:text-gray-100 w-96 min-w-[320px] max-w-[420px]">
                         <div class="mb-4">
                             <h5 class="text-xl font-semibold cursor-pointer toggle-list" data-list-id="{{ $listId }}">
+
                                 {{ $list['name'] }}
                                 <span class="text-gray-500 text-sm">({{ count($list['items'] ?? []) }} artículos)</span>
                             </h5>
@@ -74,7 +74,7 @@
                                         <div class="flex items-center space-x-3 w-full">
                                             <button
                                                 class="mark-done flex items-center justify-center w-10 h-10 rounded-full transition-all 
-                                                                                                                        {{ $item['done'] ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-800' }}"
+                                                                                                                                                                    {{ $item['done'] ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-800' }}"
                                                 data-item-id="{{ $itemId }}" data-list-id="{{ $listId }}"
                                                 data-done="{{ $item['done'] ? 'true' : 'false' }}">
 
@@ -118,9 +118,9 @@
 
                             <!-- Modal -->
                             <div id="itemModal"
-                                class="hidden fixed inset-0 bg-gray-700 bg-opacity-75 flex items-center justify-center">
-                                <div class="bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm w-full">
-                                    <h3 class="text-xl font-semibold mb-4 text-white">Añadir Ítem</h3>
+                                class="hidden fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center">
+                                <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+                                    <h3 class="text-xl font-semibold mb-4">Añadir Ítem</h3>
                                     <form action="{{ route('shopping_list.add_item', $listId) }}" method="POST"
                                         class="flex flex-col gap-3">
                                         @csrf
@@ -173,6 +173,46 @@
 
             closeModalBtn.addEventListener('click', () => {
                 itemModal.classList.add('hidden');
+            });
+
+            document.querySelectorAll('.mark-done').forEach(button => {
+                button.addEventListener('click', async function () {
+                    const itemId = this.getAttribute('data-item-id');
+                    const listId = this.getAttribute('data-list-id');
+                    const newState = this.getAttribute('data-done') === 'true' ? false : true;
+
+                    // Cambiar el estado del botón inmediatamente
+                    this.innerHTML = newState ? '✔' : '✖️';
+                    this.classList.toggle('bg-green-500', newState);
+                    this.classList.toggle('text-white', newState);
+                    this.classList.toggle('bg-gray-300', !newState);
+                    this.classList.toggle('text-gray-800', !newState);
+                    this.closest('li').querySelector('p').classList.toggle('line-through', newState);
+                    this.closest('li').querySelector('p').classList.toggle('text-gray-500', newState);
+                    this.setAttribute('data-done', newState.toString());
+
+                    // Sincronizar con el servidor
+                    try {
+                        let response = await fetch(`/shopping_list/${listId}/toggle_done/${itemId}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                            body: JSON.stringify({ done: newState })
+                        });
+                        let result = await response.json();
+                        if (!result.success) {
+                            // Si falla, revertir el cambio
+                            this.innerHTML = !newState ? '✔' : '✖️';
+                            this.classList.toggle('bg-green-500', !newState);
+                            this.classList.toggle('text-white', !newState);
+                            this.classList.toggle('bg-gray-300', newState);
+                            this.classList.toggle('text-gray-800', newState);
+                            this.closest('li').querySelector('p').classList.toggle('line-through', !newState);
+                            this.closest('li').querySelector('p').classList.toggle('text-gray-500', !newState);
+                        }
+                    } catch (error) {
+                        alert('Error al actualizar el estado.');
+                    }
+                });
             });
         });
 
