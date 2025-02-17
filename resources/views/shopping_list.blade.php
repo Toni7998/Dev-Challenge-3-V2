@@ -36,7 +36,6 @@
                         class="bg-white shadow-md rounded-lg p-4 dark:bg-gray-800 dark:text-gray-100 w-96 min-w-[320px] max-w-[420px]">
                         <div class="mb-4">
                             <h5 class="text-xl font-semibold cursor-pointer toggle-list" data-list-id="{{ $listId }}">
-
                                 {{ $list['name'] }}
                                 <span class="text-gray-500 text-sm">({{ count($list['items'] ?? []) }} artículos)</span>
                             </h5>
@@ -67,14 +66,14 @@
                         </div>
 
                         <div id="list-content-{{ $listId }}" class="hidden transition-all duration-300">
-                            <ul class="space-y-3">
+                            <ul class="space-y-3 mb-6">
                                 @foreach ($list['items'] ?? [] as $itemId => $item)
                                     <li
                                         class="flex justify-between items-center p-3 bg-gray-100 dark:bg-gray-700 rounded-md shadow-md">
                                         <div class="flex items-center space-x-3 w-full">
                                             <button
                                                 class="mark-done flex items-center justify-center w-10 h-10 rounded-full transition-all 
-                                                                                                                                                                    {{ $item['done'] ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-800' }}"
+                                                                                                                                                                                {{ $item['done'] ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-800' }}"
                                                 data-item-id="{{ $itemId }}" data-list-id="{{ $listId }}"
                                                 data-done="{{ $item['done'] ? 'true' : 'false' }}">
 
@@ -112,25 +111,26 @@
                             </ul>
 
                             <!-- Modal para añadir un ítem -->
-                            <button id="openModalBtn"
-                                class="bg-green-500 text-white p-3 rounded-md hover:bg-green-600 transition-colors">Añadir
-                                Ítem</button>
+                            <div class="text-center mb-6">
+                                <button id="openModalBtn"
+                                    class="bg-green-500 text-white p-3 rounded-md hover:bg-green-600 transition-colors">Añadir
+                                    Ítem</button>
+                            </div>
 
                             <!-- Modal -->
                             <div id="itemModal"
-                                class="hidden fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center">
-                                <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+                                class="hidden fixed inset-0 bg-gray-800 bg-opacity-80 flex items-center justify-center">
+                                <div class="bg-gray-900 text-white p-6 rounded-lg shadow-lg max-w-sm w-full">
                                     <h3 class="text-xl font-semibold mb-4">Añadir Ítem</h3>
                                     <form action="{{ route('shopping_list.add_item', $listId) }}" method="POST"
                                         class="flex flex-col gap-3">
                                         @csrf
-                                        <label for="item_name" class="text-sm text-gray-600 dark:text-gray-400">Nombre del
-                                            ítem</label>
+                                        <label for="item_name" class="text-sm text-gray-400">Nombre del ítem</label>
                                         <input type="text" id="item_name" name="item_name"
                                             class="p-3 w-full border rounded-md text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700"
                                             placeholder="Nombre del ítem" required>
 
-                                        <label for="category" class="text-sm text-gray-600 dark:text-gray-400">Categoría</label>
+                                        <label for="category" class="text-sm text-gray-400">Categoría</label>
                                         <input type="text" id="category" name="category"
                                             class="p-3 w-full border rounded-md text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700"
                                             placeholder="Categoría" required>
