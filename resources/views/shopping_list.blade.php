@@ -16,9 +16,8 @@
         @endif
 
         <div class="mb-8 text-center">
-            <button id="add-list-btn" class="bg-blue-500 text-white p-3 rounded-md">Añadir Lista</button>
-            <form id="add-list-form" action="{{ route('shopping_list.add') }}" method="POST"
-                class="hidden mt-4 text-center">
+            <!-- Formulario visible por defecto -->
+            <form id="add-list-form" action="{{ route('shopping_list.add') }}" method="POST" class="mt-4 text-center">
                 @csrf
                 <input type="text" name="list_name"
                     class="p-3 mb-4 w-3/4 sm:w-1/2 max-w-md border rounded-md text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700"
@@ -75,9 +74,10 @@
                                         <div class="flex items-center space-x-3 w-full">
                                             <button
                                                 class="mark-done flex items-center justify-center w-10 h-10 rounded-full transition-all 
-                                                                        {{ $item['done'] ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-800' }}"
+                                                                                                                        {{ $item['done'] ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-800' }}"
                                                 data-item-id="{{ $itemId }}" data-list-id="{{ $listId }}"
                                                 data-done="{{ $item['done'] ? 'true' : 'false' }}">
+
                                                 <span class="text-lg">
                                                     {{ $item['done'] ? '✔' : '✖️' }}
                                                 </span>
@@ -88,34 +88,53 @@
                                                     class="text-lg font-semibold {{ $item['done'] ? 'line-through text-gray-500' : 'text-gray-900 dark:text-gray-100' }}">
                                                     {{ $item['name'] }}
                                                 </p>
+
+                                                <div class="mt-2">
+                                                    <span
+                                                        class="text-sm font-medium bg-gray-300 dark:bg-gray-600 px-2 py-1 rounded-md text-gray-800 dark:text-gray-200">
+                                                        Categoría: {{ $item['category'] }}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
+
+                                        <form action="{{ route('shopping_list.delete_item', [$listId, $itemId]) }}" method="POST">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+                                                onclick="return confirmDeletion('¿Estás seguro de que deseas eliminar este ítem?')">
+                                                🗑
+                                            </button>
+                                        </form>
                                     </li>
                                 @endforeach
                             </ul>
 
-                            <!-- Contenedor para mejorar la separación del botón -->
-                            <div class="flex justify-center mt-8">
-                                <button id="openModalBtn"
-                                    class="bg-green-500 text-white p-3 rounded-md hover:bg-green-600 transition-colors shadow-md">
-                                    ➕ Añadir Ítem
-                                </button>
-                            </div>
+                            <!-- Modal para añadir un ítem -->
+                            <button id="openModalBtn"
+                                class="bg-green-500 text-white p-3 rounded-md hover:bg-green-600 transition-colors">Añadir
+                                Ítem</button>
 
                             <!-- Modal -->
                             <div id="itemModal"
-                                class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-75 flex items-center justify-center">
-                                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm w-full">
-                                    <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Añadir Ítem</h3>
+                                class="hidden fixed inset-0 bg-gray-700 bg-opacity-75 flex items-center justify-center">
+                                <div class="bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm w-full">
+                                    <h3 class="text-xl font-semibold mb-4 text-white">Añadir Ítem</h3>
                                     <form action="{{ route('shopping_list.add_item', $listId) }}" method="POST"
                                         class="flex flex-col gap-3">
                                         @csrf
+                                        <label for="item_name" class="text-sm text-gray-600 dark:text-gray-400">Nombre del
+                                            ítem</label>
                                         <input type="text" id="item_name" name="item_name"
-                                            class="p-3 w-full border rounded-md text-gray-900 dark:text-gray-100 dark:bg-gray-700 dark:border-gray-600"
+                                            class="p-3 w-full border rounded-md text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700"
                                             placeholder="Nombre del ítem" required>
+
+                                        <label for="category" class="text-sm text-gray-600 dark:text-gray-400">Categoría</label>
                                         <input type="text" id="category" name="category"
-                                            class="p-3 w-full border rounded-md text-gray-900 dark:text-gray-100 dark:bg-gray-700 dark:border-gray-600"
+                                            class="p-3 w-full border rounded-md text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700"
                                             placeholder="Categoría" required>
+
                                         <button type="submit"
                                             class="bg-green-500 text-white p-3 rounded-md hover:bg-green-600 transition-colors">➕</button>
                                     </form>
@@ -123,7 +142,6 @@
                                         class="mt-4 bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition-colors">Cerrar</button>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 @endforeach
@@ -133,24 +151,34 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            document.getElementById('add-list-btn').addEventListener('click', function () {
-                document.getElementById('add-list-form').classList.toggle('hidden');
-            });
-
+            // Mostrar u ocultar los ítems de la lista al hacer clic en el nombre de la lista
             document.querySelectorAll('.toggle-list').forEach(list => {
                 list.addEventListener('click', () => {
                     const listId = list.getAttribute('data-list-id');
-                    document.getElementById(`list-content-${listId}`).classList.toggle('hidden');
+                    const listContent = document.getElementById(`list-content-${listId}`);
+                    if (listContent) {
+                        listContent.classList.toggle('hidden');
+                    }
                 });
             });
 
+            // Modal logic
             const openModalBtn = document.getElementById('openModalBtn');
             const itemModal = document.getElementById('itemModal');
             const closeModalBtn = document.getElementById('closeModalBtn');
 
-            openModalBtn.addEventListener('click', () => itemModal.classList.remove('hidden'));
-            closeModalBtn.addEventListener('click', () => itemModal.classList.add('hidden'));
-            itemModal.addEventListener('click', (e) => { if (e.target === itemModal) itemModal.classList.add('hidden'); });
+            openModalBtn.addEventListener('click', () => {
+                itemModal.classList.remove('hidden');
+            });
+
+            closeModalBtn.addEventListener('click', () => {
+                itemModal.classList.add('hidden');
+            });
         });
+
+        // Confirmación antes de eliminar
+        function confirmDeletion(message) {
+            return confirm(message);  // Muestra un mensaje de confirmación antes de continuar
+        }
     </script>
 </x-app-layout>
