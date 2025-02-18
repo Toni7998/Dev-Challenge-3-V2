@@ -58,8 +58,9 @@
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit"
-                                    class="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition-colors"
-                                    onclick="return confirmDeletion('¿Estás seguro de que deseas eliminar esta lista?')">
+                                    class="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition-colors open-delete-modal"
+                                    data-form-action="{{ route('shopping_list.delete', $listId) }}"
+                                    data-message="¿Estás seguro de que deseas eliminar esta lista?">
                                     🗑
                                 </button>
                             </form>
@@ -73,7 +74,7 @@
                                         <div class="flex items-center space-x-3 w-full">
                                             <button
                                                 class="mark-done flex items-center justify-center w-10 h-10 rounded-full transition-all 
-                                                                                                                                                                                                                                                                                                                                                                                {{ $item['done'] ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-800' }}"
+                                                                                                                                                                                                                                                                                                                                                                                                                                            {{ $item['done'] ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-800' }}"
                                                 data-item-id="{{ $itemId }}" data-list-id="{{ $listId }}"
                                                 data-done="{{ $item['done'] ? 'true' : 'false' }}">
 
@@ -101,8 +102,9 @@
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
-                                                class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
-                                                onclick="return confirmDeletion('¿Estás seguro de que deseas eliminar este ítem?')">
+                                                class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors open-delete-modal"
+                                                data-form-action="{{ route('shopping_list.delete_item', [$listId, $itemId]) }}"
+                                                data-message="¿Estás seguro de que deseas eliminar este ítem?">
                                                 🗑
                                             </button>
                                         </form>
@@ -156,13 +158,27 @@
         @endif
     </div>
 
-    <script>
-        // Confirmación antes de eliminar
-        function confirmDeletion(message) {
-            return confirm(message);
-        }
+    <!-- Modal de confirmación de eliminación -->
+    <div id="delete-confirmation-modal"
+        class="hidden fixed inset-0 bg-gray-800 bg-opacity-80 flex items-center justify-center z-50">
+        <div class="bg-gray-900 text-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+            <p id="delete-message" class="mb-4">¿Estás seguro de que deseas eliminar este ítem?</p>
+            <form id="delete-form" method="POST">
+                @csrf
+                @method('DELETE')
+                <div class="flex justify-between">
+                    <button type="submit"
+                        class="bg-red-500 text-white p-2 rounded-md hover:bg-red-600">Eliminar</button>
+                    <button type="button" id="close-modal"
+                        class="bg-gray-500 text-white p-2 rounded-md hover:bg-gray-600">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
+    <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Obtener el estado de las listas abiertas desde localStorage
             const listStates = JSON.parse(localStorage.getItem('listStates')) || {}; // Obtener estado guardado
 
             // Restaurar el estado de las listas abiertas
@@ -237,14 +253,35 @@
                 });
             });
 
-            // Cerrar los modales
+            // Cerrar los modales de añadir ítem
             document.querySelectorAll('.itemModal').forEach(modal => {
                 const closeModalBtn = modal.querySelector('.closeModalBtn');
                 if (closeModalBtn) {
                     closeModalBtn.addEventListener('click', () => modal.classList.add('hidden'));
                 }
             });
+
+            // Mostrar el modal de confirmación de eliminación
+            document.querySelectorAll('.open-delete-modal').forEach(button => {
+                button.addEventListener('click', function () {
+                    const message = this.getAttribute('data-message');
+                    const formAction = this.getAttribute('data-form-action');
+
+                    // Cambiar el mensaje y la acción del formulario en el modal
+                    document.getElementById('delete-message').innerText = message;
+                    document.getElementById('delete-form').setAttribute('action', formAction);
+
+                    // Mostrar el modal
+                    document.getElementById('delete-confirmation-modal').classList.remove('hidden');
+                });
+            });
+
+            // Cerrar el modal de confirmación
+            document.getElementById('close-modal').addEventListener('click', () => {
+                document.getElementById('delete-confirmation-modal').classList.add('hidden');
+            });
         });
     </script>
+
 
 </x-app-layout>
