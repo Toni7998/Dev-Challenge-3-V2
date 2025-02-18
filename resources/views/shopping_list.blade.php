@@ -73,7 +73,7 @@
                                         <div class="flex items-center space-x-3 w-full">
                                             <button
                                                 class="mark-done flex items-center justify-center w-10 h-10 rounded-full transition-all 
-                                                                                                                                                                                                                                                                                                                    {{ $item['done'] ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-800' }}"
+                                                                                                                                                                                                                                                                                                                                                                                {{ $item['done'] ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-800' }}"
                                                 data-item-id="{{ $itemId }}" data-list-id="{{ $listId }}"
                                                 data-done="{{ $item['done'] ? 'true' : 'false' }}">
 
@@ -112,8 +112,9 @@
 
                             <!-- Modal para añadir un ítem -->
                             <div class="text-center mb-6">
-                                <button id="openModalBtn"
-                                    class="bg-green-500 text-white p-4 rounded-md hover:bg-green-600 transition-colors text-lg w-full sm:w-4/4 lg:w-2/2 mx-auto">
+                                <button
+                                    class="openModalBtn bg-green-500 text-white p-4 rounded-md hover:bg-green-600 transition-colors text-lg w-full sm:w-4/4 lg:w-2/2 mx-auto"
+                                    data-list-id="{{ $listId }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white mx-auto" fill="none"
                                         viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -123,20 +124,20 @@
                             </div>
 
                             <!-- Modal -->
-                            <div id="itemModal"
-                                class="hidden fixed inset-0 bg-gray-800 bg-opacity-80 flex items-center justify-center">
+                            <div class="itemModal hidden fixed inset-0 bg-gray-800 bg-opacity-80 flex items-center justify-center"
+                                data-list-id="{{ $listId }}">
                                 <div class="bg-gray-900 text-white p-6 rounded-lg shadow-lg max-w-sm w-full">
                                     <h3 class="text-xl font-semibold mb-4">Añadir Ítem</h3>
                                     <form action="{{ route('shopping_list.add_item', $listId) }}" method="POST"
                                         class="flex flex-col gap-3">
                                         @csrf
                                         <label for="item_name" class="text-sm text-gray-400">Nombre del ítem</label>
-                                        <input type="text" id="item_name" name="item_name"
+                                        <input type="text" name="item_name"
                                             class="p-3 w-full border rounded-md text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700"
                                             placeholder="Nombre del ítem" required>
 
                                         <label for="category" class="text-sm text-gray-400">Categoría</label>
-                                        <input type="text" id="category" name="category"
+                                        <input type="text" name="category"
                                             class="p-3 w-full border rounded-md text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700"
                                             placeholder="Categoría" required>
 
@@ -144,8 +145,8 @@
                                             class="bg-blue-500 text-white p-3 rounded-md hover:bg-blue-600 transition-colors">Añadir
                                             Item</button>
                                     </form>
-                                    <button id="closeModalBtn"
-                                        class="mt-4 bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition-colors">Cerrar</button>
+                                    <button
+                                        class="closeModalBtn mt-4 bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition-colors">Cerrar</button>
                                 </div>
                             </div>
                         </div>
@@ -174,33 +175,20 @@
                 }
 
                 list.addEventListener('click', () => {
-                    const isOpen = listContent.classList.toggle('hidden');
-                    listStates[listId] = !isOpen;
+                    const isOpen = !listContent.classList.toggle('hidden');
+                    listStates[listId] = isOpen;
                     localStorage.setItem('listStates', JSON.stringify(listStates));
                 });
             });
 
-            // Modal logic
-            const openModalBtn = document.getElementById('openModalBtn');
-            const itemModal = document.getElementById('itemModal');
-            const closeModalBtn = document.getElementById('closeModalBtn');
-
-            openModalBtn.addEventListener('click', () => {
-                itemModal.classList.remove('hidden');
-            });
-
-            closeModalBtn.addEventListener('click', () => {
-                itemModal.classList.add('hidden');
-            });
-
-            // Marcar como hecho sin cerrar la lista
+            // Manejo de marcado de productos
             document.querySelectorAll('.mark-done').forEach(button => {
                 button.addEventListener('click', async function () {
                     const itemId = this.getAttribute('data-item-id');
                     const listId = this.getAttribute('data-list-id');
                     const newState = this.getAttribute('data-done') === 'true' ? false : true;
 
-                    // Cambiar el estado del botón inmediatamente
+                    // Cambiar la interfaz antes de enviar la solicitud
                     this.innerHTML = newState ? '✔' : '✖️';
                     this.classList.toggle('bg-green-500', newState);
                     this.classList.toggle('text-white', newState);
@@ -210,29 +198,53 @@
                     this.closest('li').querySelector('p').classList.toggle('text-gray-500', newState);
                     this.setAttribute('data-done', newState.toString());
 
-                    // Sincronizar con el servidor
                     try {
                         let response = await fetch(`/shopping_list/${listId}/toggle_done/${itemId}`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            },
                             body: JSON.stringify({ done: newState })
                         });
+
                         let result = await response.json();
                         if (!result.success) {
-                            // Si falla, revertir el cambio
-                            this.innerHTML = !newState ? '✔' : '✖️';
-                            this.classList.toggle('bg-green-500', !newState);
-                            this.classList.toggle('text-white', !newState);
-                            this.classList.toggle('bg-gray-300', newState);
-                            this.classList.toggle('text-gray-800', newState);
-                            this.closest('li').querySelector('p').classList.toggle('line-through', !newState);
-                            this.closest('li').querySelector('p').classList.toggle('text-gray-500', !newState);
+                            throw new Error('Error en la actualización');
                         }
                     } catch (error) {
                         alert('Error al actualizar el estado.');
+
+                        // Revertir cambios en caso de error
+                        this.innerHTML = !newState ? '✔' : '✖️';
+                        this.classList.toggle('bg-green-500', !newState);
+                        this.classList.toggle('text-white', !newState);
+                        this.classList.toggle('bg-gray-300', newState);
+                        this.classList.toggle('text-gray-800', newState);
+                        this.closest('li').querySelector('p').classList.toggle('line-through', !newState);
+                        this.closest('li').querySelector('p').classList.toggle('text-gray-500', !newState);
+                        this.setAttribute('data-done', (!newState).toString());
                     }
                 });
             });
+
+            // Manejo de modales para añadir ítems
+            document.querySelectorAll('.openModalBtn').forEach(button => {
+                button.addEventListener('click', function () {
+                    const listId = this.getAttribute('data-list-id');
+                    const modal = document.querySelector(`.itemModal[data-list-id="${listId}"]`);
+                    if (modal) modal.classList.remove('hidden');
+                });
+            });
+
+            // Cerrar los modales
+            document.querySelectorAll('.itemModal').forEach(modal => {
+                const closeModalBtn = modal.querySelector('.closeModalBtn');
+                if (closeModalBtn) {
+                    closeModalBtn.addEventListener('click', () => modal.classList.add('hidden'));
+                }
+            });
         });
     </script>
+
 </x-app-layout>
