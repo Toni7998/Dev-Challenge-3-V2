@@ -74,7 +74,7 @@
                                         <div class="flex items-center space-x-3 w-full">
                                             <button
                                                 class="mark-done flex items-center justify-center w-10 h-10 rounded-full transition-all 
-                                                                                                                                                                                                                                                                                                                                                                                                                                            {{ $item['done'] ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-800' }}"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                    {{ $item['done'] ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-800' }}"
                                                 data-item-id="{{ $itemId }}" data-list-id="{{ $listId }}"
                                                 data-done="{{ $item['done'] ? 'true' : 'false' }}">
 
@@ -276,10 +276,12 @@
                 });
             });
 
-            // Cerrar el modal de confirmación
-            document.getElementById('close-modal').addEventListener('click', () => {
+            // Cerrar el modal de confirmación sin enviar el formulario
+            document.getElementById('close-modal').addEventListener('click', function (event) {
+                event.preventDefault(); // Evita que el formulario se envíe
                 document.getElementById('delete-confirmation-modal').classList.add('hidden');
             });
+
         });
     </script>
 
