@@ -73,7 +73,7 @@
                                         <div class="flex items-center space-x-3 w-full">
                                             <button
                                                 class="mark-done flex items-center justify-center w-10 h-10 rounded-full transition-all 
-                                                                                                                                                                                                                                                        {{ $item['done'] ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-800' }}"
+                                                                                                                                                                                                                                                                                                                    {{ $item['done'] ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-800' }}"
                                                 data-item-id="{{ $itemId }}" data-list-id="{{ $listId }}"
                                                 data-done="{{ $item['done'] ? 'true' : 'false' }}">
 
@@ -156,6 +156,11 @@
     </div>
 
     <script>
+        // Confirmación antes de eliminar
+        function confirmDeletion(message) {
+            return confirm(message);
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             const listStates = JSON.parse(localStorage.getItem('listStates')) || {}; // Obtener estado guardado
 
@@ -228,11 +233,6 @@
                     }
                 });
             });
-
-            // Confirmación antes de eliminar
-            function confirmDeletion(message) {
-                return confirm(message);
-            }
         });
     </script>
 </x-app-layout>
