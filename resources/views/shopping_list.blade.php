@@ -54,16 +54,12 @@
                                 </button>
                             </form>
 
-                            <form action="{{ route('shopping_list.delete', $listId) }}" method="POST" class="delete-list-form">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit"
-                                    class="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition-colors open-delete-modal"
-                                    data-form-action="{{ route('shopping_list.delete', $listId) }}"
-                                    data-message="¿Estás seguro de que deseas eliminar esta lista?">
-                                    🗑
-                                </button>
-                            </form>
+                            <button type="button"
+                                class="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition-colors open-delete-modal"
+                                data-form-action="{{ route('shopping_list.delete', $listId) }}"
+                                data-message="¿Estás seguro de que deseas eliminar esta lista?">
+                                🗑
+                            </button>
                         </div>
 
                         <div id="list-content-{{ $listId }}" class="hidden transition-all duration-300">
@@ -74,7 +70,7 @@
                                         <div class="flex items-center space-x-3 w-full">
                                             <button
                                                 class="mark-done flex items-center justify-center w-10 h-10 rounded-full transition-all 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                    {{ $item['done'] ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-800' }}"
+                                                            {{ $item['done'] ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-800' }}"
                                                 data-item-id="{{ $itemId }}" data-list-id="{{ $listId }}"
                                                 data-done="{{ $item['done'] ? 'true' : 'false' }}">
 
@@ -98,16 +94,12 @@
                                             </div>
                                         </div>
 
-                                        <form action="{{ route('shopping_list.delete_item', [$listId, $itemId]) }}" method="POST">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit"
-                                                class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors open-delete-modal"
-                                                data-form-action="{{ route('shopping_list.delete_item', [$listId, $itemId]) }}"
-                                                data-message="¿Estás seguro de que deseas eliminar este ítem?">
-                                                🗑
-                                            </button>
-                                        </form>
+                                        <button type="button"
+                                            class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors open-delete-modal"
+                                            data-form-action="{{ route('shopping_list.delete_item', [$listId, $itemId]) }}"
+                                            data-message="¿Estás seguro de que deseas eliminar este ítem?">
+                                            🗑
+                                        </button>
                                     </li>
                                 @endforeach
                             </ul>
@@ -263,7 +255,9 @@
 
             // Mostrar el modal de confirmación de eliminación
             document.querySelectorAll('.open-delete-modal').forEach(button => {
-                button.addEventListener('click', function () {
+                button.addEventListener('click', function (event) {
+                    event.preventDefault(); // Prevenir el comportamiento por defecto del botón
+
                     const message = this.getAttribute('data-message');
                     const formAction = this.getAttribute('data-form-action');
 
@@ -282,8 +276,14 @@
                 document.getElementById('delete-confirmation-modal').classList.add('hidden');
             });
 
+            // Enviar el formulario solo después de la confirmación del usuario
+            document.getElementById('delete-form').addEventListener('submit', function (event) {
+                event.preventDefault(); // Evitar el envío del formulario de inmediato
+
+                // Ahora, podemos enviar el formulario manualmente después de la confirmación
+                this.submit(); // Enviar el formulario
+            });
         });
     </script>
-
 
 </x-app-layout>
