@@ -73,7 +73,7 @@
                                         <div class="flex items-center space-x-3 w-full">
                                             <button
                                                 class="mark-done flex items-center justify-center w-10 h-10 rounded-full transition-all 
-                                                                                                                                                                                                                                {{ $item['done'] ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-800' }}"
+                                                                                                                                                                                                                                                        {{ $item['done'] ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-800' }}"
                                                 data-item-id="{{ $itemId }}" data-list-id="{{ $listId }}"
                                                 data-done="{{ $item['done'] ? 'true' : 'false' }}">
 
@@ -114,7 +114,11 @@
                             <div class="text-center mb-6">
                                 <button id="openModalBtn"
                                     class="bg-green-500 text-white p-4 rounded-md hover:bg-green-600 transition-colors text-lg w-full sm:w-4/4 lg:w-2/2 mx-auto">
-                                    ➕
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white mx-auto" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 4v16m8-8H4" />
+                                    </svg>
                                 </button>
                             </div>
 
@@ -137,7 +141,7 @@
                                             placeholder="Categoría" required>
 
                                         <button type="submit"
-                                            class="bg-green-500 text-white p-3 rounded-md hover:bg-green-600 transition-colors">Añadir
+                                            class="bg-blue-500 text-white p-3 rounded-md hover:bg-blue-600 transition-colors">Añadir
                                             Item</button>
                                     </form>
                                     <button id="closeModalBtn"
@@ -153,14 +157,21 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Mostrar u ocultar los ítems de la lista al hacer clic en el nombre de la lista
+            const listStates = JSON.parse(localStorage.getItem('listStates')) || {}; // Obtener estado guardado
+
+            // Restaurar el estado de las listas abiertas
             document.querySelectorAll('.toggle-list').forEach(list => {
+                const listId = list.getAttribute('data-list-id');
+                const listContent = document.getElementById(`list-content-${listId}`);
+
+                if (listStates[listId]) {
+                    listContent.classList.remove('hidden');
+                }
+
                 list.addEventListener('click', () => {
-                    const listId = list.getAttribute('data-list-id');
-                    const listContent = document.getElementById(`list-content-${listId}`);
-                    if (listContent) {
-                        listContent.classList.toggle('hidden');
-                    }
+                    const isOpen = listContent.classList.toggle('hidden');
+                    listStates[listId] = !isOpen;
+                    localStorage.setItem('listStates', JSON.stringify(listStates));
                 });
             });
 
@@ -177,6 +188,7 @@
                 itemModal.classList.add('hidden');
             });
 
+            // Marcar como hecho sin cerrar la lista
             document.querySelectorAll('.mark-done').forEach(button => {
                 button.addEventListener('click', async function () {
                     const itemId = this.getAttribute('data-item-id');
@@ -216,11 +228,11 @@
                     }
                 });
             });
-        });
 
-        // Confirmación antes de eliminar
-        function confirmDeletion(message) {
-            return confirm(message);  // Muestra un mensaje de confirmación antes de continuar
-        }
+            // Confirmación antes de eliminar
+            function confirmDeletion(message) {
+                return confirm(message);
+            }
+        });
     </script>
 </x-app-layout>
