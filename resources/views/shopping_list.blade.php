@@ -76,25 +76,41 @@
                 </h5>
             </div>
 
-            <div class="flex items-center justify-between mb-4 space-x-4">
-                <form action="{{ route('shopping_list.share', $listId) }}" method="POST"
-                    class="flex items-center space-x-2 w-full">
-                    @csrf
-                    <input type="email" name="email" placeholder="Correo del usuario"
-                        class="p-2 border rounded-md w-full bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        required>
-                    <button type="submit"
-                        class="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition-colors">
-                        🔗
-                    </button>
-                </form>
+            <div class="mb-4">
 
-                <button type="button"
-                    class="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition-colors open-delete-modal"
-                    data-form-action="{{ route('shopping_list.delete', $listId) }}"
-                    data-message="¿Estás seguro de que deseas eliminar esta lista?">
-                    🗑
-                </button>
+                <div class="flex items-center justify-between space-x-4 mb-2">
+                    <form action="{{ route('shopping_list.share', $listId) }}" method="POST"
+                        class="flex items-center space-x-2 w-full">
+                        @csrf
+                        <input type="email" name="email" placeholder="Correo del usuario"
+                            class="p-2 border rounded-md w-full bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            required>
+                        <button type="submit"
+                            class="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition-colors">
+                            🔗
+                        </button>
+                    </form>
+
+                    <button type="button"
+                        class="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition-colors open-delete-modal"
+                        data-form-action="{{ route('shopping_list.delete', $listId) }}"
+                        data-message="¿Estás seguro de que deseas eliminar esta lista?">
+                        🗑
+                    </button>
+                </div>
+
+                <!-- Contenedor flex para alinear el botón a la izquierda -->
+                <div class="flex justify-start max-w-full">
+                    <button
+                        class="toggleDoneItemsBtn flex items-center space-x-1 px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors border-0 ml-2"
+                        data-list-id="{{ $listId }}"
+                        style="min-width: 0; border: none;">
+                        <span class="toggleIcon">🚫</span>
+                        <span class="toggleText">Mostrar Productos Marcados</span>
+                    </button>
+                </div>
+
+
             </div>
 
             <div id="list-content-{{ $listId }}" class="hidden transition-all duration-300">
@@ -319,6 +335,77 @@
 
                 // Ahora, podemos enviar el formulario manualmente después de la confirmación
                 this.submit(); // Enviar el formulario
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleBtn = document.getElementById('toggleDoneItems');
+            const toggleIcon = document.getElementById('toggleIcon');
+            const toggleText = document.getElementById('toggleText');
+
+            // Función para ocultar o mostrar productos marcados
+            function updateMarkedItemsVisibility(showMarked) {
+                // Buscar todos los productos marcados (done = true)
+                document.querySelectorAll('li').forEach(li => {
+                    // El botón mark-done dentro del li:
+                    const markBtn = li.querySelector('.mark-done');
+                    if (markBtn && markBtn.getAttribute('data-done') === 'true') {
+                        li.style.display = showMarked ? 'flex' : 'none';
+                    }
+                });
+
+                // Actualizar texto e icono del botón
+                if (showMarked) {
+                    toggleIcon.textContent = '🚫'; // icono para ocultar marcados
+                    toggleText.textContent = 'Ocultar Productos Marcados';
+                } else {
+                    toggleIcon.textContent = '✅'; // icono para mostrar marcados
+                    toggleText.textContent = 'Mostrar Productos Marcados';
+                }
+            }
+
+            // Estado inicial: NO mostrar productos marcados
+            let showMarked = false;
+            updateMarkedItemsVisibility(showMarked);
+
+            // Al hacer click, alternar estado
+            toggleBtn.addEventListener('click', function() {
+                showMarked = !showMarked;
+                updateMarkedItemsVisibility(showMarked);
+            });
+        });
+
+        // Restaurar estados guardados (opcional)
+        const doneVisibilityStates = JSON.parse(localStorage.getItem('doneVisibilityStates')) || {};
+
+        document.querySelectorAll('.toggleDoneItemsBtn').forEach(button => {
+            const listId = button.getAttribute('data-list-id');
+            const listContent = document.getElementById(`list-content-${listId}`);
+
+            // Función para mostrar u ocultar ítems marcados según estado
+            function updateDoneItemsVisibility(showDone) {
+                const doneItems = listContent.querySelectorAll('li.flex');
+                doneItems.forEach(li => {
+                    const isDone = li.querySelector('.mark-done').getAttribute('data-done') === 'true';
+                    if (isDone) {
+                        li.style.display = showDone ? '' : 'none';
+                    }
+                });
+                // Actualiza texto y emoji botón
+                button.querySelector('.toggleIcon').textContent = showDone ? '✔' : '🚫';
+                button.querySelector('.toggleText').textContent = showDone ? 'Ocultar Productos Marcados' : 'Mostrar Productos Marcados';
+            }
+
+            // Restaurar estado previo
+            const showDone = doneVisibilityStates[listId] ?? false;
+            updateDoneItemsVisibility(showDone);
+
+            button.addEventListener('click', () => {
+                const currentState = doneVisibilityStates[listId] ?? false;
+                const newState = !currentState;
+                doneVisibilityStates[listId] = newState;
+                localStorage.setItem('doneVisibilityStates', JSON.stringify(doneVisibilityStates));
+                updateDoneItemsVisibility(newState);
             });
         });
     </script>
