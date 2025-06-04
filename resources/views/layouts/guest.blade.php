@@ -30,15 +30,6 @@
             {{ $slot }}
         </div>
 
-        <!-- SSO Google -->
-        <div
-            class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white dark:bg-gray-800 shadow-md overflow-hidden sm:rounded-lg">
-            <a href="/google-auth/redirect"
-                class="block w-full py-2 px-4 bg-indigo-600 text-white font-semibold text-center rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50">
-                SSO con Google
-            </a>
-        </div>
-
         <!-- SSO Github -->
         <div
             class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white dark:bg-gray-800 shadow-md overflow-hidden sm:rounded-lg">

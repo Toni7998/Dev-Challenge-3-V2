@@ -30,17 +30,14 @@
     </script>
 
     <div class="container mx-auto p-6">
-        <!-- Contenedor con flex para alinear el título y el icono -->
-        <div class="flex items-center justify-center mb-8">
+        <!-- Contenedor con flex para alinear el título y el botón -->
+        <div class="flex items-center justify-center gap-4 mb-8">
             <h1 class="text-3xl font-semibold text-gray-900 dark:text-white">Mis Listas de Compras</h1>
-            <button id="open-guide-modal" class="ml-3 bg-yellow-600 text-white p-2 rounded-full hover:bg-yellow-700 transition-colors flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z" />
-                </svg>
+            <button id="open-guide-modal" class="bg-yellow-600 text-white w-9 h-9 rounded-full hover:bg-yellow-700 transition-colors text-lg font-bold flex items-center justify-center">
+                ?
             </button>
         </div>
     </div>
-
 
     @if(session('success'))
     <div class="alert alert-success mb-4 p-4 text-green-700 bg-green-100 rounded-lg">
